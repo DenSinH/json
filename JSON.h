@@ -9,6 +9,8 @@
 #include <array>
 #include <vector>
 #include <stdexcept>
+#include <filesystem>
+#include <fstream>
 
 
 namespace JSON {
@@ -58,7 +60,7 @@ struct JSON {
         value = v;
         if constexpr(std::is_same_v<T, Object>) {
             // make sure keys are valid
-            for (auto it : v) {
+            for (const auto& it : v) {
                 for (char c : it.first) {
                     if (!std::isalnum(c) && c != '_') [[unlikely]] {
                         throw std::runtime_error("Bad JSON object key: " + it.first);
@@ -123,12 +125,35 @@ struct JSON {
         return stream.str();
     }
 
+    template<int indent_amount = 0>
+    void dump_to(const std::filesystem::path& filename) const {
+        std::ofstream file(filename, std::ios::trunc);
+        if (!file.good()) {
+            throw std::runtime_error("Could not open file");
+        }
+
+        file << dump<indent_amount>();
+        file.close();
+    }
+
     static JSON load(const char* string) {
         const char* c = string;
         return _load(c);
     }
 
     static JSON load(const std::string& string) { return load(string.c_str()); }
+
+    static JSON load_from(const std::filesystem::path& filename) {
+        std::ifstream file(filename);
+        if (!file.good()) {
+            throw std::runtime_error("Could not open file");
+        }
+
+        file.seekg(0, std::ios::beg);
+        std::string content;
+        content.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        return load(content);
+    }
 
 private:
     using underlying = std::variant<std::string, int, double, bool, Object, std::vector<JSON>, std::nullptr_t>;
@@ -230,9 +255,9 @@ private:
                 while (*c && *c != '\"') {
                     if (*c == '\\') {
                         switch (*(c + 1)) {
-                            case 't': stream << 't'; break;
-                            case 'n': stream << 'n'; break;
-                            case 'r': stream << 'r'; break;
+                            case 't': stream << '\t'; c++; break;
+                            case 'n': stream << '\n'; c++; break;
+                            case 'r': stream << '\r'; c++; break;
                             case '\"':
                             case '\'':
                                 stream << *(c + 1);
@@ -252,6 +277,7 @@ private:
                     }
                     c++;
                 }
+                expect('\"');
                 return JSON(stream.str());
             }
             case '[': {
@@ -302,8 +328,54 @@ private:
             default: {
                 c--;
                 if (std::isdigit(*c) || *c == '+' || *c == '-' || *c == '.') {
-                    while (std::isdigit(*c) || *c == '+' || *c == '-' || *c == '.') c++;
-                    return JSON(0);
+                    bool is_negative = false;
+                    if (*c == '+') { c++; }
+                    else if (*c == '-') { c++; is_negative = true; }
+
+                    bool is_float = false;
+                    int length = 0;
+                    std::stringstream num_stream{};
+                    while (std::isdigit(*c) || *c == '.') {
+                        if (*c == '.') {
+                            if (is_float) {
+                                throw std::runtime_error("Bad JSON float value");
+                            }
+                            if (length == 0) {
+                                throw std::runtime_error("No digits before JSON float decimal point");
+                            }
+                            num_stream << '.';
+                            is_float = true;
+                            length = 0;
+                        }
+                        else {
+                            num_stream << *c;
+                        }
+
+                        c++;
+                        length++;
+                    }
+
+                    if (is_float) {
+                        if (length == 0) {
+                            throw std::runtime_error("No digits after JSON float decimal point");
+                        }
+
+                        double value = std::stod(num_stream.str());
+                        if (is_negative) {
+                            value = -value;
+                        }
+                        return JSON(value);
+                    }
+                    else {
+                        if (length == 0) {
+                            throw std::runtime_error("Zero length integer literal");
+                        }
+                        int value = std::stoi(num_stream.str());
+                        if (is_negative) {
+                            value = -value;
+                        }
+                        return JSON(value);
+                    }
                 }
                 std::stringstream err_stream{};
                 err_stream << "Bad JSON: got " << *c;

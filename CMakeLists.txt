@@ -3,4 +3,4 @@ project(JSON)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(JSON main.cpp)
+add_executable(JSON main.cpp testing/raw_string.h)
