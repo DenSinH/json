@@ -26,7 +26,7 @@ int main() {
         }
     }];
 
-//    std::cout << test[4]["key3"][0].get<int>() << std::endl;
+    std::cout << test[4]["key3"][0].get<int>() << std::endl;
 
     JSON::JSON test2 = JSON::Object{
         {"key", 1},
@@ -36,10 +36,10 @@ int main() {
         }}
     };
 
-//    std::cout << test2["key3"][2].get<std::string>() << std::endl;
-//    std::cout << test.dump<4>() << std::endl;
-//    std::cout << test.dump<2>() << std::endl;
-//    std::cout << test.dump<0>() << std::endl;
+    std::cout << test2["key3"][2].get<std::string>() << std::endl;
+    std::cout << test.dump<4>() << std::endl;
+    std::cout << test.dump<2>() << std::endl;
+    std::cout << test.dump<0>() << std::endl;
 
     JSON::JSON::load(raw).dump_to<2>("./testing/out.json");
 
