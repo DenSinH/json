@@ -81,14 +81,14 @@ struct JSON {
         value = std::vector<JSON>{ args... };
     }
 
-    JSON operator[](size_t index) {
+    JSON& operator[](size_t index) {
         if (std::holds_alternative<std::vector<JSON>>(value)) {
             return std::get<std::vector<JSON>>(value)[index];
         }
         throw std::runtime_error("Bad JSON array access");
     }
 
-    JSON operator[](const std::string& key) {
+    JSON& operator[](const std::string& key) {
         if (std::holds_alternative<std::map<std::string, JSON>>(value)) {
             return std::get<Object>(value)[key];
         }

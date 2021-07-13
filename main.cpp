@@ -37,9 +37,12 @@ int main() {
     };
 
     std::cout << test2["key3"][2].get<std::string>() << std::endl;
-    std::cout << test.dump<4>() << std::endl;
-    std::cout << test.dump<2>() << std::endl;
-    std::cout << test.dump<0>() << std::endl;
+    std::cout << test2.dump<2>() << std::endl;
+    test2["key3"] = nullptr;
+    test2["hello"] = JSON::Array[{
+        1, 2, true, false, nullptr
+    }];
+    std::cout << test2.dump<2>() << std::endl;
 
     JSON::JSON::load(raw).dump_to<2>("./testing/out.json");
 
