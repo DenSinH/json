@@ -17,9 +17,6 @@ namespace JSON {
 
 namespace Details {
 
-template<typename T, typename ...Ts>
-using all_same = std::conjunction<std::is_same<T, Ts>...>;
-
 std::string escape(const std::string& source) {
     std::stringstream stream;
     for (auto c : source) {

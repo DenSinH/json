@@ -45,6 +45,7 @@ int main() {
     std::cout << test2.dump<2>() << std::endl;
 
     JSON::JSON::load(raw).dump_to<2>("./testing/out.json");
+    std::cout << sizeof(JSON::JSON);  // 48
 
     return 0;
 }
