@@ -17,7 +17,7 @@ namespace JSON {
 
 namespace Details {
 
-std::string escape(const std::string& source) {
+static std::string escape(const std::string& source) {
     std::stringstream stream;
     for (auto c : source) {
         switch (c) {
@@ -88,6 +88,20 @@ struct JSON {
     JSON& operator[](const std::string& key) {
         if (std::holds_alternative<std::map<std::string, JSON>>(value)) {
             return std::get<Object>(value)[key];
+        }
+        throw std::runtime_error("Bad JSON map access");
+    }
+
+    const JSON& operator[](size_t index) const {
+        if (std::holds_alternative<std::vector<JSON>>(value)) {
+            return std::get<std::vector<JSON>>(value)[index];
+        }
+        throw std::runtime_error("Bad JSON array access");
+    }
+
+    const JSON& operator[](const std::string& key) const {
+        if (std::holds_alternative<std::map<std::string, JSON>>(value)) {
+            return std::get<Object>(value).at(key);
         }
         throw std::runtime_error("Bad JSON map access");
     }
