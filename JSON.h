@@ -115,6 +115,12 @@ struct JSON {
     }
     template<> constexpr float get() const { return get<double>(); }
 
+    // for sweeter syntax
+    template<typename T>
+    explicit operator T() const {
+      return get<T>();
+    }
+
     template<typename T>
     constexpr bool holds() const {
         return std::holds_alternative<T>(value);
